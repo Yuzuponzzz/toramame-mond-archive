@@ -4,6 +4,18 @@ const $ = id => document.getElementById(id);
 const PUBLISH_URL_KEY = "toramame_publish_worker_url";
 const ADMIN_KEY_SESSION = "toramame_admin_key";
 
+
+function nowIso(){
+  return new Date().toISOString();
+}
+
+function touchTopic(topic, kind="updated"){
+  if(!topic) return;
+  topic.updatedAt = nowIso();
+  topic.lastUpdateKind = kind;
+}
+
+
 function uid(prefix="id"){
   return prefix + "-" + Math.random().toString(36).slice(2,9);
 }
@@ -34,8 +46,6 @@ function renderSiteSettings(){
   $("siteTitle").value=s.title||"とらまめMondまとめ";
   $("siteSubtitle").value=s.subtitle||"";
   $("siteNotice").value=s.notice||"";
-  $("sitePickupTitle").value=s.pickupTitle||"ここに何か記載予定";
-  $("sitePickupDescription").value=s.pickupDescription||"質問・回答をツリーで追えるようにするためのアーカイブです。";
 }
 
 $("saveSiteBtn").onclick=()=>{
@@ -44,8 +54,6 @@ $("saveSiteBtn").onclick=()=>{
   s.title=$("siteTitle").value.trim();
   s.subtitle=$("siteSubtitle").value.trim();
   s.notice=$("siteNotice").value.trim();
-  s.pickupTitle=$("sitePickupTitle").value.trim();
-  s.pickupDescription=$("sitePickupDescription").value.trim();
   alert("サイト基本情報を保存しました。右上の「公開する」で公開サイトへ反映できます。");
 };
 
@@ -100,13 +108,14 @@ function drawNode(parent,t,node,kind){
 
   el.querySelector(".delete-node").onclick=()=>{
     if(!confirm("この質問と、その下の関連質問を削除しますか？"))return;
-    removeNode(t,node.id);renderTree(t);
+    removeNode(t,node.id);touchTopic(t,"updated");renderTree(t);
   };
   el.querySelector(".add-child").onclick=()=>{
     save();
     const child={id:uid("q"),type:"child",question:"",answer:"",mond:"",x:"",children:[]};
     (node.children ||= []).push(child.id);
     t.nodes.push(child);
+    touchTopic(t,"related");
     renderTree(t);
   };
 
@@ -135,6 +144,7 @@ $("saveTopicBtn").onclick=()=>{
   t.category=$("topicCategory").value.trim();
   t.description=$("topicDescription").value.trim();
   t.featured=$("topicFeatured").checked;
+  touchTopic(t,"updated");
   renderTopics(); renderEditor();
   alert("保存しました。");
 };
@@ -142,12 +152,12 @@ $("saveTopicBtn").onclick=()=>{
 $("addRootBtn").onclick=()=>{
   const t=state.data.topics.find(x=>x.id===state.selected); if(!t)return;
   const n={id:uid("q"),type:"root",question:"",answer:"",mond:"",x:"",children:[]};
-  (t.nodes ||= []).push(n); renderTree(t);
+  (t.nodes ||= []).push(n); touchTopic(t,"question"); renderTree(t);
 };
 
 $("newTopicBtn").onclick=()=>{
   if(!state.sourceLoaded){alert("現在のdata.jsonを読み込めていません。");return;}
-  const t={id:uid("topic"),category:"",title:"新しい話題",description:"",featured:false,nodes:[]};
+  const t={id:uid("topic"),category:"",title:"新しい話題",description:"",featured:false,createdAt:nowIso(),updatedAt:nowIso(),lastUpdateKind:"created",nodes:[]};
   state.data.topics.push(t);state.selected=t.id;renderTopics();renderEditor();$("topicTitle").focus();
 };
 

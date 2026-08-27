@@ -3,6 +3,67 @@ const $ = id => document.getElementById(id);
 
 const PUBLISH_URL_KEY = "toramame_publish_worker_url";
 const ADMIN_KEY_SESSION = "toramame_admin_key";
+const ADMIN_AUTH_TIME_SESSION = "toramame_admin_auth_time";
+const ADMIN_AUTH_TTL = 30 * 60 * 1000;
+
+
+
+function clearAdminSession(){
+  sessionStorage.removeItem(ADMIN_KEY_SESSION);
+  sessionStorage.removeItem(ADMIN_AUTH_TIME_SESSION);
+}
+
+function adminSessionFresh(){
+  const t=Number(sessionStorage.getItem(ADMIN_AUTH_TIME_SESSION)||0);
+  return !!t && (Date.now()-t)<ADMIN_AUTH_TTL;
+}
+
+async function requireAdminLogin(){
+  document.body.style.visibility="hidden";
+  const publishUrl=getPublishUrl();
+
+  if(!publishUrl){
+    document.body.style.visibility="visible";
+    alert("公開設定がありません。右上の「公開設定」にCloudflare Worker URLを入力してください。");
+    return;
+  }
+
+  let key=adminSessionFresh() ? (sessionStorage.getItem(ADMIN_KEY_SESSION)||"") : "";
+  if(!adminSessionFresh()) clearAdminSession();
+
+  while(true){
+    if(!key){
+      key=prompt("管理画面のパスワードを入力してください。")||"";
+      if(!key){
+        location.href="/toramame-mond-archive/";
+        return false;
+      }
+    }
+
+    try{
+      const res=await fetch(publishUrl+"/auth",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","X-Admin-Key":key},
+        body:"{}"
+      });
+
+      if(res.ok){
+        sessionStorage.setItem(ADMIN_KEY_SESSION,key);
+        sessionStorage.setItem(ADMIN_AUTH_TIME_SESSION,String(Date.now()));
+        document.body.style.visibility="visible";
+        return true;
+      }
+
+      clearAdminSession();
+      key="";
+      alert("パスワードが違います。");
+    }catch(err){
+      document.body.style.visibility="visible";
+      alert("認証サーバーに接続できません。");
+      return false;
+    }
+  }
+}
 
 
 function nowIso(){
@@ -198,22 +259,26 @@ $("publishBtn").onclick=async()=>{
   try{
     const res=await fetch(publishUrl+"/publish",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Key":adminKey},body:JSON.stringify({data:state.data})});
     const result=await res.json().catch(()=>({}));
-    if(res.status===401||res.status===403){sessionStorage.removeItem(ADMIN_KEY_SESSION);throw new Error("公開用パスワードが違います。");}
+    if(res.status===401||res.status===403){clearAdminSession();throw new Error("公開用パスワードが違います。");}
     if(!res.ok)throw new Error(result.error||`公開に失敗しました (${res.status})`);
-    updatePublishStatus("公開完了");alert("公開しました。");
+    sessionStorage.setItem(ADMIN_AUTH_TIME_SESSION,String(Date.now()));updatePublishStatus("公開完了");alert("公開しました。");
   }catch(err){updatePublishStatus("公開失敗");alert(err.message);}
   finally{btn.disabled=false;btn.textContent=old;}
 };
 
 updatePublishStatus();
 
-/* GitHub Pages上の絶対URLから、毎回最新のdata.jsonを取得する */
-fetch("/toramame-mond-archive/data.json?v="+Date.now(), {cache:"no-store"})
-  .then(r=>{if(!r.ok)throw new Error("data.json "+r.status);return r.json();})
-  .then(loadData)
-  .catch(err=>{
-    console.error(err);
-    state.data={site:{title:"とらまめMondまとめ",subtitle:"",notice:""},topics:[]};
-    state.selected=null;state.sourceLoaded=false;renderTopics();renderEditor();
-    alert("現在のdata.jsonを読み込めませんでした。");
-  });
+(async()=>{
+  const ok=await requireAdminLogin();
+  if(!ok)return;
+
+  fetch("/toramame-mond-archive/data.json?v="+Date.now(), {cache:"no-store"})
+    .then(r=>{if(!r.ok)throw new Error("data.json "+r.status);return r.json();})
+    .then(loadData)
+    .catch(err=>{
+      console.error(err);
+      state.data={site:{title:"とらまめMondまとめ",subtitle:"",notice:""},topics:[]};
+      state.selected=null;state.sourceLoaded=false;renderTopics();renderEditor();
+      alert("現在のdata.jsonを読み込めませんでした。");
+    });
+})();

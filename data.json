@@ -9,7 +9,7 @@
   "topics": [
     {
       "id": "perfect-daiko",
-      "category": "FF14",
+      "category": "Xで話題",
       "title": "キモマクロロスガルの話",
       "description": "",
       "featured": true,
@@ -68,17 +68,17 @@
           "children": []
         }
       ],
-      "updatedAt": "2026-08-27T12:35:45.886Z",
+      "updatedAt": "2026-08-27T12:44:02.019Z",
       "lastUpdateKind": "updated"
     },
     {
       "id": "topic-ir1db26",
-      "category": "FF14",
+      "category": "固定",
       "title": "本当松？",
       "description": "",
       "featured": false,
       "createdAt": "2026-08-27T12:35:48.116Z",
-      "updatedAt": "2026-08-27T12:40:12.128Z",
+      "updatedAt": "2026-08-27T12:43:47.327Z",
       "lastUpdateKind": "updated",
       "nodes": [
         {

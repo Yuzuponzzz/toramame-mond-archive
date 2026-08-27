@@ -15,7 +15,7 @@
   <div class="publish-area">
     <span id="publishStatus" class="publish-status">公開先：未設定</span>
     <div class="actions">
-      <button id="logoutBtn" class="ghost">ログアウト</button>
+      <button id="logoutBtn" class="ghost" onclick="sessionStorage.removeItem('toramame_admin_key');sessionStorage.removeItem('toramame_admin_auth_time');location.href='/toramame-mond-archive/';return false;">ログアウト</button>
       <button id="publishSettingsBtn" class="ghost">公開設定</button>
       <button id="downloadBtn" class="ghost">JSONバックアップ</button>
       <button id="publishBtn" class="primary publish">公開する</button>
@@ -88,6 +88,6 @@
   </div>
 </template>
 
-<script src="admin.js"></script>
+<script src="admin.js?v=20260827-1705"></script>
 </body>
 </html>

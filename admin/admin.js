@@ -4,6 +4,65 @@ const $ = id => document.getElementById(id);
 const PUBLISH_URL_KEY = "toramame_publish_worker_url";
 const ADMIN_KEY_SESSION = "toramame_admin_key";
 
+const SITE_ROOT = "/toramame-mond-archive/";
+
+async function verifyAdminKey(key){
+  const publishUrl = getPublishUrl();
+  if(!publishUrl) return {ok:false, setup:true};
+
+  const res = await fetch(publishUrl + "/auth", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": key
+    },
+    body: "{}"
+  });
+
+  if(res.status === 401 || res.status === 403) return {ok:false};
+  if(!res.ok) throw new Error("認証サーバーに接続できません。");
+  return {ok:true};
+}
+
+async function requireAdminLogin(){
+  document.body.style.visibility = "hidden";
+
+  const publishUrl = getPublishUrl();
+  if(!publishUrl){
+    document.body.style.visibility = "visible";
+    alert("最初に公開設定が必要です。右上の「公開設定」にCloudflare Worker URLを入力してください。");
+    return;
+  }
+
+  let key = sessionStorage.getItem(ADMIN_KEY_SESSION) || "";
+
+  while(true){
+    if(!key){
+      key = prompt("管理画面のパスワードを入力してください。") || "";
+      if(!key){
+        location.href = SITE_ROOT;
+        return;
+      }
+    }
+
+    try{
+      const result = await verifyAdminKey(key);
+      if(result.ok){
+        sessionStorage.setItem(ADMIN_KEY_SESSION, key);
+        document.body.style.visibility = "visible";
+        return;
+      }
+      sessionStorage.removeItem(ADMIN_KEY_SESSION);
+      key = "";
+      alert("パスワードが違います。");
+    }catch(err){
+      document.body.style.visibility = "visible";
+      alert(err.message);
+      return;
+    }
+  }
+}
+
 function uid(prefix="id"){
   return prefix + "-" + Math.random().toString(36).slice(2,9);
 }
@@ -169,6 +228,8 @@ $("publishBtn").onclick=async()=>{
 updatePublishStatus();
 
 /* GitHub Pages上の絶対URLから、毎回最新のdata.jsonを取得する */
+requireAdminLogin();
+
 fetch("/toramame-mond-archive/data.json?v="+Date.now(), {cache:"no-store"})
   .then(r=>{if(!r.ok)throw new Error("data.json "+r.status);return r.json();})
   .then(loadData)

@@ -10,43 +10,66 @@
     {
       "id": "perfect-daiko",
       "category": "FF14",
-      "title": "パーフェクト代行の話",
-      "description": "灰が灰を叩き出す話。",
+      "title": "キモマクロロスガルの話",
+      "description": "",
       "featured": true,
       "nodes": [
         {
           "id": "q1",
           "type": "root",
+          "question": "ヒールパーフ！！！！！！！！\n\nhttps://x.com/Shiroi0207/status/2092469752866484235?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E2092469752866484235%7Ctwgr%5Ec6beb0db90456ec1f6a3dbec19693380c9712df0%7Ctwcon%5Es1_c10&ref_url=https%3A%2F%2Fmond.how%2Ftopics%2F8um3wtrzqmn2qls%2Fey69x0hp0exgpbz",
+          "answer": "タイムリーすぎるだろｗｗｗｗｗｗｗｗｗｗ",
+          "mond": "https://mond.how/topics/zwn61430a85472f/ynyu36mpnfu6ut0",
+          "x": "",
+          "children": [
+            "q-pj0wnoh"
+          ]
+        },
+        {
+          "id": "q-pj0wnoh",
+          "type": "child",
+          "question": "ま、まあこいつはヒールパーフでイキってるわけではないからギリギリセーフじゃないか……？ｗ\n\n勘違いしてそうな感じはプンプンするけどｗ\n\n\n\nそんな事より、こいつのプレイ動画見たらPTのエフェクト全ONで泡吹いたわ\n\nこんなんじゃ床見づらすぎてまともにギミック練習出来ないだろ\n\n\n",
+          "answer": "ｗｗｗｗｗｗ",
+          "mond": "https://mond.how/topics/cchyxwj66xovvus/enl9zcrnt92pmw0",
+          "x": "",
+          "children": [
+            "q-mf1mmlc"
+          ]
+        },
+        {
+          "id": "q-mf1mmlc",
+          "type": "child",
+          "question": "みんな忘れてるかもしれないけどこいつは数年前にも赤魔のヴァルエアロ、ヴァルサンダガ系のマクロで同じような話題で伸びてたホモガルだから味占めてるだけだよ\n\n\n",
+          "answer": "全然知らない😞",
+          "mond": "https://mond.how/topics/sxq05zfdabauz9k/xygylad9ysmtei9",
+          "x": "",
+          "children": [
+            "q-7z1snyo"
+          ]
+        },
+        {
+          "id": "q-7z1snyo",
+          "type": "child",
+          "question": "漆黒の頃にエンボルデンかパーフェクト代行が晒して有名になったよね\n\nイキリとキモマクロとキモメディアで倍率ドーンや\n\n\n",
+          "answer": "😞",
+          "mond": "https://mond.how/topics/68ef53gveh5zzr8/vxktdwu7qzwr9ms",
+          "x": "",
+          "children": [
+            "q-xkqqabx"
+          ]
+        },
+        {
+          "id": "q-xkqqabx",
+          "type": "child",
           "question": "パーフェクト代行は本人も灰なのがバレてたところまでが面白かったわ\n\n灰が灰叩き出すのなんでなんだろうな",
           "answer": "そうなんだｗｗｗｗｗｗｗｗｗｗ",
           "mond": "https://mond.how/topics/zwn61430a85472f/ynyu36mpnfu6ut0",
-          "x": "https://x.com/toramame_FF14",
-          "children": []
-        }
-      ],
-      "updatedAt": "2026-08-27T08:59:34.120Z",
-      "lastUpdateKind": "updated"
-    },
-    {
-      "id": "topic-3gux40s",
-      "category": "テスト",
-      "title": "テスト用話題",
-      "description": "テスト用の話題です、",
-      "featured": false,
-      "createdAt": "2026-08-27T09:42:41.249Z",
-      "updatedAt": "2026-08-27T09:43:23.401Z",
-      "lastUpdateKind": "updated",
-      "nodes": [
-        {
-          "id": "q-y529qx3",
-          "type": "root",
-          "question": "テスト用の質問です。",
-          "answer": "テスト用の回答です。",
-          "mond": "",
           "x": "",
           "children": []
         }
-      ]
+      ],
+      "updatedAt": "2026-08-27T12:24:28.719Z",
+      "lastUpdateKind": "updated"
     }
   ]
 }

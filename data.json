@@ -33,6 +33,24 @@
           "children": []
         }
       ]
+    },
+    {
+      "id": "topic-rs7uzzb",
+      "category": "テスト",
+      "title": "反映テスト",
+      "description": "管理画面から追加した話題の反映テスト。",
+      "featured": false,
+      "nodes": [
+        {
+          "id": "q-d4dq1hc",
+          "type": "root",
+          "question": "これは新しい話題の質問テスト",
+          "answer": "これは新しい話題の回答テスト",
+          "mond": "",
+          "x": "",
+          "children": []
+        }
+      ]
     }
   ]
 }

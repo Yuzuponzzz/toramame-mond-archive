@@ -91,6 +91,7 @@ function loadData(data){
   state.sourceLoaded = true;
   state.selected = data.topics[0]?.id || null;
   renderSiteSettings();
+  renderCategoryOptions();
   renderTopics();
   renderEditor();
 }
@@ -133,6 +134,19 @@ function moveTopic(id,delta){
   renderTopics();
   renderEditor();
 }
+
+
+function renderCategoryOptions(){
+  const list=$("categoryOptions");
+  if(!list || !state.data)return;
+  const cats=[...new Set(
+    (state.data.topics||[])
+      .map(t=>(t.category||"").trim())
+      .filter(Boolean)
+  )].sort((a,b)=>a.localeCompare(b,"ja"));
+  list.innerHTML=cats.map(c=>`<option value="${text(c)}"></option>`).join("");
+}
+
 
 function renderTopics(){
   const box=$("topicList"); box.innerHTML="";
@@ -178,6 +192,7 @@ function renderEditor(){
   $("topicTitle").value=t.title||"";
   $("topicCategory").value=t.category||"";
   $("topicDescription").value=t.description||"";
+  $("topicFeatured").checked=!!t.featured;
   renderTree(t);
 }
 
@@ -243,8 +258,9 @@ $("saveTopicBtn").onclick=()=>{
   t.title=$("topicTitle").value.trim();
   t.category=$("topicCategory").value.trim();
   t.description=$("topicDescription").value.trim();
+  t.featured=$("topicFeatured").checked;
   touchTopic(t,"updated");
-  renderTopics(); renderEditor();
+  renderCategoryOptions(); renderTopics(); renderEditor();
   alert("保存しました。");
 };
 
@@ -257,7 +273,7 @@ $("addRootBtn").onclick=()=>{
 $("newTopicBtn").onclick=()=>{
   if(!state.sourceLoaded){alert("現在のdata.jsonを読み込めていません。");return;}
   const t={id:uid("topic"),category:"",title:"新しい話題",description:"",featured:false,createdAt:nowIso(),updatedAt:nowIso(),lastUpdateKind:"created",nodes:[]};
-  state.data.topics.push(t);state.selected=t.id;renderTopics();renderEditor();$("topicTitle").focus();
+  state.data.topics.push(t);state.selected=t.id;renderCategoryOptions();renderTopics();renderEditor();$("topicTitle").focus();
 };
 
 $("deleteTopicBtn").onclick=()=>{
@@ -265,7 +281,7 @@ $("deleteTopicBtn").onclick=()=>{
   const t=state.data.topics.find(x=>x.id===state.selected);
   if(!confirm(`「${t.title}」を削除しますか？`))return;
   state.data.topics=state.data.topics.filter(x=>x.id!==state.selected);
-  state.selected=state.data.topics[0]?.id||null;renderTopics();renderEditor();
+  state.selected=state.data.topics[0]?.id||null;renderCategoryOptions();renderTopics();renderEditor();
 };
 
 $("downloadBtn").onclick=()=>{

@@ -98,8 +98,12 @@
 
       <div class="form-grid">
         <label>タイトル<input id="topicTitle"></label>
-        <label>カテゴリ<input id="topicCategory"></label>
+        <label>カテゴリ
+  <input id="topicCategory" list="categoryOptions" placeholder="既存カテゴリを選択 / 新規入力">
+  <datalist id="categoryOptions"></datalist>
+</label>
         <label class="wide">説明<textarea id="topicDescription" rows="2"></textarea></label>
+        <label class="check"><input id="topicFeatured" type="checkbox"> PICK UPに表示</label>
       </div>
 
       <div class="section-head">
@@ -188,7 +192,7 @@
 
         // Only now start the admin application.
         const script = document.createElement("script");
-        script.src = "admin.js?v=20260827-cleanup1";
+        script.src = "admin.js?v=20260827-category1";
         document.body.appendChild(script);
         return;
       }

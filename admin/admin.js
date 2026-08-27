@@ -178,7 +178,6 @@ function renderEditor(){
   $("topicTitle").value=t.title||"";
   $("topicCategory").value=t.category||"";
   $("topicDescription").value=t.description||"";
-  $("topicFeatured").checked=!!t.featured;
   renderTree(t);
 }
 
@@ -244,7 +243,6 @@ $("saveTopicBtn").onclick=()=>{
   t.title=$("topicTitle").value.trim();
   t.category=$("topicCategory").value.trim();
   t.description=$("topicDescription").value.trim();
-  t.featured=$("topicFeatured").checked;
   touchTopic(t,"updated");
   renderTopics(); renderEditor();
   alert("保存しました。");

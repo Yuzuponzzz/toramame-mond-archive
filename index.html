@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>とらまめMondまとめ</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="header">
+<header class="site-header">
   <div class="container">
     <div class="eyebrow">MOND ARCHIVE</div>
     <h1>とらまめMondまとめ</h1>
@@ -15,103 +15,114 @@
     <span class="notice">試作版・公開前</span>
   </div>
 </header>
-<main class="container">
+
+<main class="container main">
   <section class="intro">
     <div class="eyebrow">PICK UP</div>
     <h2>面白かったやり取りを、流れごと読む。</h2>
     <p>1つの質問だけでなく、その後につながった質問・回答もツリーで追えるようにするためのアーカイブです。</p>
   </section>
+
   <div class="toolbar">
-    <input id="search" type="search" placeholder="話題・質問・回答を検索">
+    <input id="search" type="search" placeholder="話題・質問・回答を検索" autocomplete="off">
     <div id="count"></div>
   </div>
+
   <section id="topics"></section>
 </main>
+
 <footer><div class="container">とらまめMondまとめ — prototype</div></footer>
+
 <script>
-const esc = s => (s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nl = s => esc(s).replace(/\n/g, "<br>");
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nl = s => esc(s).replace(/\n/g, '<br>');
 
-function nodeHTML(node) {
+function nodeHTML(node){
   return `
-  <article class="node">
-    <div class="qbox">
-      <div class="label">
-        <img class="label-avatar" src="anonymous.svg" alt="">
-        <span>QUESTION</span>
-        <span class="speaker-name">匿名</span>
-      </div>
-      <div class="text">${nl(node.question)}</div>
-    </div>
-
-    <div class="reply">
-      <div class="abox">
+    <article class="node">
+      <div class="card question-card">
         <div class="label">
-          <img class="label-avatar" src="toramame-icon.jpg" alt="">
-          <span>ANSWER</span>
-          <span class="speaker-name">とらまめ</span>
+          <img class="avatar" src="anonymous.svg" alt="匿名">
+          <span>QUESTION</span>
+          <span class="speaker">匿名</span>
         </div>
-        <div class="text answer">${nl(node.answer)}</div>
-        <div class="links">
-          ${node.mond ? `<a href="${esc(node.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>` : ""}
-          ${node.x ? `<a href="${esc(node.x)}" target="_blank" rel="noopener">Xで見る ↗</a>` : ""}
+        <div class="text">${nl(node.question)}</div>
+      </div>
+
+      <div class="reply">
+        <div class="card answer-card">
+          <div class="label">
+            <img class="avatar" src="toramame-icon.jpg" alt="とらまめ">
+            <span>ANSWER</span>
+            <span class="speaker">とらまめ</span>
+          </div>
+          <div class="text answer-text">${nl(node.answer)}</div>
+          <div class="links">
+            ${node.mond ? `<a href="${esc(node.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>` : ''}
+            ${node.x ? `<a href="${esc(node.x)}" target="_blank" rel="noopener">Xで見る ↗</a>` : ''}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="children"></div>
-  </article>`;
+      <div class="children"></div>
+    </article>`;
 }
 
 async function init(){
-  const DATA = await fetch("data.json").then(r=>r.json());
+  const DATA = await fetch('data.json').then(r => r.json());
+  const section = document.getElementById('topics');
 
-  function render(query=""){
-    const q=query.trim().toLowerCase();
-    const section=document.getElementById("topics");
-    section.innerHTML="";
-    let shown=0;
+  function render(query=''){
+    const q = query.trim().toLowerCase();
+    section.innerHTML = '';
+    let shown = 0;
 
     for(const topic of DATA.topics){
-      const topicText=[topic.title,topic.description,topic.category,...topic.nodes.flatMap(n=>[n.question,n.answer])].join(" ").toLowerCase();
+      const topicText = [topic.title, topic.description, topic.category,
+        ...topic.nodes.flatMap(n => [n.question, n.answer])].join(' ').toLowerCase();
       if(q && !topicText.includes(q)) continue;
       shown++;
 
-      const wrap=document.createElement("section");
-      wrap.className="topic";
-      wrap.innerHTML=`
+      const wrap = document.createElement('section');
+      wrap.className = 'topic';
+      wrap.innerHTML = `
         <div class="topic-head">
           <div>
-            <span class="cat">${esc(topic.category)}</span>
+            <span class="category">${esc(topic.category)}</span>
             <h2>${esc(topic.title)}</h2>
             <p>${esc(topic.description)}</p>
           </div>
-          ${topic.featured?'<span class="featured">PICK UP</span>':''}
+          ${topic.featured ? '<span class="featured">PICK UP</span>' : ''}
         </div>
         <div class="tree"></div>`;
 
-      const tree=wrap.querySelector(".tree");
-      const byId=Object.fromEntries(topic.nodes.map(n=>[n.id,n]));
+      const tree = wrap.querySelector('.tree');
+      const byId = Object.fromEntries(topic.nodes.map(n => [n.id, n]));
 
-      function draw(id,parent,depth){
-        const n=byId[id]; if(!n) return;
-        const holder=document.createElement("div");
-        holder.innerHTML=nodeHTML(n,depth);
-        const el=holder.firstElementChild;
+      function draw(id, parent){
+        const n = byId[id];
+        if(!n) return;
+        const holder = document.createElement('div');
+        holder.innerHTML = nodeHTML(n);
+        const el = holder.firstElementChild;
         parent.appendChild(el);
-        const children=el.querySelector(".children");
-        (n.children||[]).forEach(cid=>draw(cid,children,depth+1));
+        const children = el.querySelector('.children');
+        (n.children || []).forEach(cid => draw(cid, children));
       }
 
-      topic.nodes.filter(n=>n.type==="root").forEach(n=>draw(n.id,tree,0));
+      topic.nodes.filter(n => n.type === 'root').forEach(n => draw(n.id, tree));
       section.appendChild(wrap);
     }
-    document.getElementById("count").textContent=`${shown} topics`;
+
+    document.getElementById('count').textContent = `${shown} topics`;
   }
 
   render();
-  document.getElementById("search").addEventListener("input",e=>render(e.target.value));
+  document.getElementById('search').addEventListener('input', e => render(e.target.value));
 }
-init();
+init().catch(err => {
+  document.getElementById('topics').innerHTML = '<p>データの読み込みに失敗しました。</p>';
+  console.error(err);
+});
 </script>
 </body>
 </html>

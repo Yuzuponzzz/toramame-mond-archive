@@ -37,9 +37,9 @@
     {
       "id": "topic-rs7uzzb",
       "category": "テスト",
-      "title": "反映テスト",
+      "title": "管理画面からの直接公開・最終テスト。",
       "description": "管理画面から追加した話題の反映テスト。",
-      "featured": false,
+      "featured": true,
       "nodes": [
         {
           "id": "q-d4dq1hc",

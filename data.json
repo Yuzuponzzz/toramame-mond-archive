@@ -2,7 +2,9 @@
   "site": {
     "title": "とらまめMondまとめ",
     "subtitle": "とらまめのMond回答から、面白かったやり取りを話題ごとに整理するアーカイブ。",
-    "notice": "試作版・公開前"
+    "notice": "試作版・公開前",
+    "pickupTitle": "あいうえお",
+    "pickupDescription": "かきくけこ"
   },
   "topics": [
     {

@@ -20,15 +20,16 @@ body{margin:0}
 .tree{position:relative;padding-left:18px}.tree:before{content:"";position:absolute;left:0;top:15px;bottom:10px;width:1px;background:#d2cec5}
 .node{position:relative;margin:0 0 30px;padding-left:20px}
 .node:before{content:"";position:absolute;left:0;top:30px;width:20px;height:1px;background:#d2cec5}
-.speaker{display:flex;align-items:center;gap:9px;margin:0 0 7px;font-size:12px;font-weight:700;color:#777}
-.avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.12)}
+
 .qbox,.abox{background:#fff;border:1px solid #e5e1d9;padding:18px 22px}
 .qbox{border-radius:15px;background:#faf9f6}
-.abox{border-radius:5px 15px 15px 15px}
-.reply{margin-top:15px;margin-left:24px;position:relative}
+.abox{border-radius:15px}
+.label{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.15em;font-weight:900;color:#888;line-height:1}
+.label-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;flex:none;border:1px solid rgba(0,0,0,.08)}
+.speaker-name{letter-spacing:0;font-size:11px;font-weight:700;color:#777;margin-left:2px}
+.text{margin-top:12px}.answer{font-size:17px}
+.reply{margin-top:14px;margin-left:24px;position:relative}
 .reply:before{content:"";position:absolute;left:-16px;top:0;width:1px;height:100%;background:#e1ddd5}
-.label{font-size:10px;letter-spacing:.15em;font-weight:900;color:#888}
-.text{margin-top:7px}.answer{font-size:17px}
 .links{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12px}.links a{color:#666}
 .children{margin-top:22px;margin-left:22px}.children:empty{display:none}
 footer{margin-top:80px;padding:28px 0;background:#202124;color:#999;font-size:11px}
@@ -37,5 +38,6 @@ footer{margin-top:80px;padding:28px 0;background:#202124;color:#999;font-size:11
 .intro h2{font-size:22px}.toolbar{display:block}.toolbar #count{margin-top:7px}
 .topic-head{display:block}.featured{display:inline-block;margin-top:12px}
 .tree{padding-left:8px}.node{padding-left:12px}.children{margin-left:8px}
-.qbox,.abox{padding:17px}.reply{margin-left:15px}.avatar{width:34px;height:34px}.answer{font-size:16px}
+.qbox,.abox{padding:16px}.reply{margin-left:15px}
+.label-avatar{width:26px;height:26px}.answer{font-size:16px}
 }

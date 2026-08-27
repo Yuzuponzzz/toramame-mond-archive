@@ -19,17 +19,6 @@
           "answer": "そうなんだｗｗｗｗｗｗｗｗｗｗ",
           "mond": "https://mond.how/topics/zwn61430a85472f/ynyu36mpnfu6ut0",
           "x": "https://x.com/toramame_FF14",
-          "children": [
-            "q-160x57e"
-          ]
-        },
-        {
-          "id": "q-160x57e",
-          "type": "child",
-          "question": "これは関連質問Bのテスト",
-          "answer": "関連回答Bのテスト　公開テスト",
-          "mond": "",
-          "x": "",
           "children": []
         }
       ]

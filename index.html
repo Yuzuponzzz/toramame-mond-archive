@@ -28,13 +28,47 @@
 .topic.flash{animation:topicFlash 1.2s ease}
 @keyframes topicFlash{0%{filter:brightness(.97)}50%{filter:brightness(1.04)}100%{filter:none}}
 
+
+.search-wrap{display:flex;gap:8px;flex:1;min-width:0}
+.clear-search{
+  border:1px solid #d8d2c9;
+  background:#fff;
+  color:#687483;
+  border-radius:10px;
+  padding:0 12px;
+  font-size:11px;
+  cursor:pointer;
+}
+.search-hit{
+  outline:2px solid rgba(115,125,135,.12);
+  outline-offset:3px;
+}
+.search-empty{
+  background:#fff;
+  border:1px solid #ddd8d0;
+  border-radius:14px;
+  padding:22px;
+  color:#707983;
+  font-size:13px;
+}
+@media(max-width:650px){
+  .search-wrap{width:100%}
+  .clear-search{flex:0 0 auto}
+}
+
 </style></head><body>
 <header class="hero"><div class="wrap"><div class="eyebrow">MOND ARCHIVE</div><h1 id="siteTitle">とらまめMondまとめ</h1><p id="siteSubtitle">とらまめのMond回答を読者目線でピックアップ</p><span id="siteNotice" class="badge">試作版・公開前</span></div></header>
 <main class="wrap"><section class="intro today-updates">
   <div class="eyebrow">TODAY</div>
   <h2>本日の更新</h2>
   <div id="todayUpdates"><p>本日の更新はありません。</p></div>
-</section><div class="toolbar"><input id="search" class="search" type="search" placeholder="話題・質問・回答を検索" autocomplete="off"><span id="count" class="count"></span></div><section id="topics"></section></main><footer><div class="wrap" style="display:flex;justify-content:space-between;gap:16px;align-items:center"><span>とらまめMondまとめ — prototype</span><a href="admin/" style="color:#777;text-decoration:none;font-size:11px">管理</a></div></footer>
+</section><div class="toolbar">
+  <div class="search-wrap">
+    <input id="search" class="search" type="search" placeholder="話題名・カテゴリ・質問・回答を検索" autocomplete="off">
+    <button id="clearSearch" class="clear-search" type="button" hidden>クリア</button>
+  </div>
+  <span id="count" class="count"></span>
+</div><section id="topics"></section></main><footer><div class="wrap" style="display:flex;justify-content:space-between;gap:16px;align-items:center"><span>とらまめMondまとめ — prototype</span><a href="admin/" style="color:#777;text-decoration:none;font-size:11px">管理</a></div></footer>
 <script>
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -101,26 +135,35 @@ async function init(){
 
     for(const t of (data.topics||[])){
       const allNodes=[];
-      const collect=nodes=>{
-        for(const n of (nodes||[])){
-          allNodes.push(n);
-          if(Array.isArray(n.children) && n.children.length && typeof n.children[0]==='object') collect(n.children);
+      const collectNode=n=>{
+        if(!n)return;
+        allNodes.push(n);
+        for(const child of (n.children||[])){
+          if(typeof child==='object') collectNode(child);
         }
       };
-      collect(t.nodes);
+      for(const n of (t.nodes||[])) collectNode(n);
 
-      const hay=[t.title,t.description,t.category,...allNodes.flatMap(n=>[n.question,n.answer])].join(' ').toLowerCase();
-      if(q && !hay.includes(q)) continue;
+      const fields=[
+        t.title||'',
+        t.category||'',
+        t.description||'',
+        ...allNodes.flatMap(n=>[n.question||'',n.answer||''])
+      ].map(v=>String(v).toLowerCase());
+
+      const matched=!q || fields.some(v=>v.includes(q));
+      if(!matched) continue;
 
       shown++;
+
       const wrap=document.createElement('section');
-      wrap.className='topic';
+      wrap.className='topic'+(q?' search-hit':'');
       wrap.id='topic-'+t.id;
       wrap.innerHTML=`<div class="topic-head"><div style="width:100%"><span class="category">${esc(t.category)}</span><div class="topic-title-row"><h2>${esc(t.title)}</h2><button class="topic-link-btn" data-copy-topic="${esc(t.id)}" type="button">リンクをコピー</button></div><p class="desc">${esc(t.description)}</p></div></div><div class="tree"></div>`;
-      const tree=wrap.querySelector('.tree');
 
-      // Support both old ID-reference children and current nested-object children.
+      const tree=wrap.querySelector('.tree');
       const byId=Object.fromEntries((t.nodes||[]).filter(n=>n&&n.id).map(n=>[n.id,n]));
+
       function drawNode(n,parent){
         if(!n)return;
         const h=document.createElement('div');
@@ -128,17 +171,29 @@ async function init(){
         const el=h.firstElementChild;
         parent.appendChild(el);
         const ch=el.querySelector('.children');
+
         for(const child of (n.children||[])){
           if(typeof child==='string') drawNode(byId[child],ch);
           else drawNode(child,ch);
         }
       }
+
       for(const n of (t.nodes||[])){
         if(n.type==='root') drawNode(n,tree);
       }
+
       sec.appendChild(wrap);
     }
-    document.getElementById('count').textContent=`${shown} topics`;
+
+    const count=document.getElementById('count');
+    if(q){
+      count.textContent=`${shown}件ヒット`;
+      if(shown===0){
+        sec.innerHTML='<div class="search-empty">一致する話題・質問・回答はありません。</div>';
+      }
+    }else{
+      count.textContent=`${shown} topics`;
+    }
   }
 
   render();
@@ -174,7 +229,21 @@ async function init(){
   window.addEventListener('hashchange',jumpToHash);
   jumpToHash();
 
-  document.getElementById('search').addEventListener('input',e=>render(e.target.value));
+  const searchInput=document.getElementById('search');
+  const clearSearch=document.getElementById('clearSearch');
+
+  searchInput.addEventListener('input',e=>{
+    const value=e.target.value;
+    clearSearch.hidden=!value;
+    render(value);
+  });
+
+  clearSearch.addEventListener('click',()=>{
+    searchInput.value='';
+    clearSearch.hidden=true;
+    render('');
+    searchInput.focus();
+  });
 
   document.querySelectorAll('.today-item').forEach(btn=>{
     btn.addEventListener('click',()=>{

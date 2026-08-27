@@ -2,6 +2,100 @@ const state = { data: null, selected: null, sourceLoaded: false, sourceName: "" 
 const $ = id => document.getElementById(id);
 const clone = x => JSON.parse(JSON.stringify(x));
 
+const PUBLISH_URL_KEY = "toramame_publish_worker_url";
+const ADMIN_KEY_SESSION = "toramame_admin_key";
+
+function getPublishUrl(){
+  return (localStorage.getItem(PUBLISH_URL_KEY) || "").trim().replace(/\/+$/,"");
+}
+
+function setPublishUrl(){
+  const current = getPublishUrl();
+  const value = prompt(
+    "Cloudflare Worker のURLを入力してください。\n例: https://toramame-mond-publish.xxxxx.workers.dev",
+    current
+  );
+  if(value === null) return;
+  const cleaned = value.trim().replace(/\/+$/,"");
+  if(!/^https:\/\/.+/.test(cleaned)){
+    alert("https:// から始まるWorker URLを入力してください。");
+    return;
+  }
+  localStorage.setItem(PUBLISH_URL_KEY, cleaned);
+  updatePublishStatus();
+  alert("公開先URLを保存しました。このブラウザでは次回から入力不要です。");
+}
+
+function updatePublishStatus(message=""){
+  const el = $("publishStatus");
+  if(!el) return;
+  if(message){
+    el.textContent = message;
+    return;
+  }
+  el.textContent = getPublishUrl() ? "公開先：設定済み" : "公開先：未設定";
+}
+
+async function publishToGitHub(){
+  if(!state.sourceLoaded){
+    alert("data.jsonを読み込めていません。ページを再読み込みしてください。");
+    return;
+  }
+
+  const publishUrl = getPublishUrl();
+  if(!publishUrl){
+    alert("先に「公開設定」でCloudflare WorkerのURLを設定してください。");
+    setPublishUrl();
+    return;
+  }
+
+  let adminKey = sessionStorage.getItem(ADMIN_KEY_SESSION) || "";
+  if(!adminKey){
+    adminKey = prompt("公開用パスワードを入力してください。") || "";
+    if(!adminKey) return;
+    sessionStorage.setItem(ADMIN_KEY_SESSION, adminKey);
+  }
+
+  if(!confirm("現在の内容を公開サイトへ反映しますか？")) return;
+
+  const btn = $("publishBtn");
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "公開中…";
+  updatePublishStatus("GitHubへ反映中…");
+
+  try{
+    const res = await fetch(publishUrl + "/publish", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Key": adminKey
+      },
+      body: JSON.stringify({ data: state.data })
+    });
+
+    let result = {};
+    try { result = await res.json(); } catch {}
+
+    if(res.status === 401 || res.status === 403){
+      sessionStorage.removeItem(ADMIN_KEY_SESSION);
+      throw new Error("公開用パスワードが違います。");
+    }
+    if(!res.ok){
+      throw new Error(result.error || `公開に失敗しました (${res.status})`);
+    }
+
+    updatePublishStatus("公開完了");
+    alert("公開しました。GitHub Pagesへの反映には少し時間がかかる場合があります。");
+  }catch(err){
+    updatePublishStatus("公開失敗");
+    alert(err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
 function uid(prefix="id"){
   return prefix + "-" + Math.random().toString(36).slice(2,9);
 }
@@ -166,6 +260,11 @@ $("fileInput").onchange=async e=>{
   catch(err){alert("読み込みに失敗しました："+err.message)}
   e.target.value="";
 };
+
+
+$("publishSettingsBtn").onclick = setPublishUrl;
+$("publishBtn").onclick = publishToGitHub;
+updatePublishStatus();
 
 fetch("../data.json").then(r=>{
   if(!r.ok) throw new Error("data.jsonを取得できませんでした。");

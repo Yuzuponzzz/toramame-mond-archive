@@ -19,45 +19,125 @@
   <div id="todayUpdates"><p>本日の更新はありません。</p></div>
 </section><div class="toolbar"><input id="search" class="search" type="search" placeholder="話題・質問・回答を検索" autocomplete="off"><span id="count" class="count"></span></div><section id="topics"></section></main><footer><div class="wrap" style="display:flex;justify-content:space-between;gap:16px;align-items:center"><span>とらまめMondまとめ — prototype</span><a href="admin/" style="color:#777;text-decoration:none;font-size:11px">管理</a></div></footer>
 <script>
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const nl=s=>esc(s).replace(/\n/g,'<br>');
-function nodeHTML(n){return `<article class="node"><div class="card question"><div class="label"><img class="avatar" src="anonymous.svg" alt="匿名"><span>QUESTION</span><span class="name">匿名</span></div><div class="body">${nl(n.question)}</div></div><div class="card answer"><div class="label"><img class="avatar" src="toramame-icon.jpg" alt="とらまめ"><span>ANSWER</span><span class="name">とらまめ</span></div><div class="body">${nl(n.answer)}</div><div class="links">${n.mond?`<a href="${esc(n.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>`:''}${n.x?`<a href="${esc(n.x)}" target="_blank" rel="noopener">Xで見る ↗</a>`:''}</div></div><div class="children"></div></article>`}
-async function init(){const response=await fetch('data.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('data.json '+response.status);const data=await response.json(),sec=document.getElementById('topics');
-const site=data.site||{};
-document.getElementById('siteTitle').textContent=site.title||'とらまめMondまとめ';
-document.getElementById('siteSubtitle').textContent=site.subtitle||'';
-document.getElementById('siteNotice').textContent=site.notice||'';
- const todayBox=document.getElementById('todayUpdates');
- const today=new Date();
- const todayKey=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
- const todays=(data.topics||[])
-   .filter(t=>{
-     if(!t.updatedAt)return false;
-     const d=new Date(t.updatedAt);
-     const key=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
-     return key===todayKey;
-   })
-   .sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
 
- if(todays.length){
-   const labels={created:"新しい話題を追加",question:"質問を追加",related:"関連質問を追加",updated:"内容を更新"};
-   todayBox.innerHTML=todays.map(t=>`
-     <button class="today-item" data-topic-id="${esc(t.id)}">
-       <strong>${esc(t.title)}</strong>
-       <span>${esc(labels[t.lastUpdateKind]||"内容を更新")}</span>
-     </button>
-   `).join('');
- }else{
-   todayBox.innerHTML='<p>本日の更新はありません。</p>';
- }
-function render(query=''){const q=query.trim().toLowerCase();sec.innerHTML='';let shown=0;for(const t of data.topics){const hay=[t.title,t.description,t.category,...t.nodes.flatMap(n=>[n.question,n.answer])].join(' ').toLowerCase();if(q&&!hay.includes(q))continue;shown++;const wrap=document.createElement('section');wrap.className='topic';wrap.innerHTML=`<div class="topic-head"><div><span class="category">${esc(t.category)}</span><h2>${esc(t.title)}</h2><p class="desc">${esc(t.description)}</p></div>${t.featured?'<span class="pick">PICK UP</span>':''}</div><div class="tree"></div>`;const tree=wrap.querySelector('.tree'),byId=Object.fromEntries(t.nodes.map(n=>[n.id,n]));function draw(id,parent){const n=byId[id];if(!n)return;const h=document.createElement('div');h.innerHTML=nodeHTML(n);const el=h.firstElementChild;parent.appendChild(el);const ch=el.querySelector('.children');(n.children||[]).forEach(cid=>draw(cid,ch))}t.nodes.filter(n=>n.type==='root').forEach(n=>draw(n.id,tree));sec.appendChild(wrap)}document.getElementById('count').textContent=`${shown} topics`}render();document.getElementById('search').addEventListener('input',e=>render(e.target.value))}
- document.querySelectorAll('.today-item').forEach(btn=>{
-   btn.addEventListener('click',()=>{
-     const target=document.getElementById('topic-'+btn.dataset.topicId);
-     if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
-   });
- });
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nl=s=>esc(s).replace(/\n/g,'<br>');
 
+function nodeHTML(n){
+  return `<article class="node">
+    <div class="card question">
+      <div class="label"><img class="avatar" src="anonymous.svg" alt="匿名"><span>QUESTION</span><span class="name">匿名</span></div>
+      <div class="body">${nl(n.question)}</div>
+    </div>
+    <div class="card answer">
+      <div class="label"><img class="avatar" src="toramame-icon.jpg" alt="とらまめ"><span>ANSWER</span><span class="name">とらまめ</span></div>
+      <div class="body">${nl(n.answer)}</div>
+      <div class="links">
+        ${n.mond?`<a href="${esc(n.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>`:''}
+        ${n.x?`<a href="${esc(n.x)}" target="_blank" rel="noopener">Xで見る ↗</a>`:''}
+      </div>
+    </div>
+    <div class="children"></div>
+  </article>`;
 }
 
-init().catch(err=>{console.error(err);document.getElementById('topics').innerHTML='<p>データの読み込みに失敗しました。</p>'});
+function localDateKey(value){
+  const d=value instanceof Date ? value : new Date(value);
+  if(Number.isNaN(d.getTime())) return "";
+  return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+}
+
+async function init(){
+  const response=await fetch('data.json?v='+Date.now(),{cache:'no-store'});
+  if(!response.ok) throw new Error('data.json '+response.status);
+
+  const data=await response.json();
+  const sec=document.getElementById('topics');
+  const site=data.site||{};
+
+  document.getElementById('siteTitle').textContent=site.title||'とらまめMondまとめ';
+  document.getElementById('siteSubtitle').textContent=site.subtitle||'';
+  document.getElementById('siteNotice').textContent=site.notice||'';
+
+  const todayBox=document.getElementById('todayUpdates');
+  const todayKey=localDateKey(new Date());
+  const todays=(data.topics||[])
+    .filter(t=>t.updatedAt && localDateKey(t.updatedAt)===todayKey)
+    .sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+
+  if(todays.length){
+    const labels={created:"新しい話題を追加",question:"質問を追加",related:"関連質問を追加",updated:"内容を更新"};
+    todayBox.innerHTML=todays.map(t=>`
+      <button class="today-item" data-topic-id="${esc(t.id)}">
+        <strong>${esc(t.title)}</strong>
+        <span>${esc(labels[t.lastUpdateKind]||"内容を更新")}</span>
+      </button>
+    `).join('');
+  }else{
+    todayBox.innerHTML='<p>本日の更新はありません。</p>';
+  }
+
+  function render(query=''){
+    const q=query.trim().toLowerCase();
+    sec.innerHTML='';
+    let shown=0;
+
+    for(const t of (data.topics||[])){
+      const allNodes=[];
+      const collect=nodes=>{
+        for(const n of (nodes||[])){
+          allNodes.push(n);
+          if(Array.isArray(n.children) && n.children.length && typeof n.children[0]==='object') collect(n.children);
+        }
+      };
+      collect(t.nodes);
+
+      const hay=[t.title,t.description,t.category,...allNodes.flatMap(n=>[n.question,n.answer])].join(' ').toLowerCase();
+      if(q && !hay.includes(q)) continue;
+
+      shown++;
+      const wrap=document.createElement('section');
+      wrap.className='topic';
+      wrap.id='topic-'+t.id;
+      wrap.innerHTML=`<div class="topic-head"><div><span class="category">${esc(t.category)}</span><h2>${esc(t.title)}</h2><p class="desc">${esc(t.description)}</p></div>${t.featured?'<span class="pick">PICK UP</span>':''}</div><div class="tree"></div>`;
+      const tree=wrap.querySelector('.tree');
+
+      // Support both old ID-reference children and current nested-object children.
+      const byId=Object.fromEntries((t.nodes||[]).filter(n=>n&&n.id).map(n=>[n.id,n]));
+      function drawNode(n,parent){
+        if(!n)return;
+        const h=document.createElement('div');
+        h.innerHTML=nodeHTML(n);
+        const el=h.firstElementChild;
+        parent.appendChild(el);
+        const ch=el.querySelector('.children');
+        for(const child of (n.children||[])){
+          if(typeof child==='string') drawNode(byId[child],ch);
+          else drawNode(child,ch);
+        }
+      }
+      for(const n of (t.nodes||[])){
+        if(n.type==='root') drawNode(n,tree);
+      }
+      sec.appendChild(wrap);
+    }
+    document.getElementById('count').textContent=`${shown} topics`;
+  }
+
+  render();
+  document.getElementById('search').addEventListener('input',e=>render(e.target.value));
+
+  document.querySelectorAll('.today-item').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const target=document.getElementById('topic-'+btn.dataset.topicId);
+      if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+}
+
+init().catch(err=>{
+  console.error(err);
+  document.getElementById('topics').innerHTML='<p>データの読み込みに失敗しました。</p>';
+});
+
 </script></body></html>

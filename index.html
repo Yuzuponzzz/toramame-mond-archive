@@ -10,18 +10,16 @@
 <header class="header">
   <div class="container">
     <div class="eyebrow">MOND ARCHIVE</div>
-    <h1 id="siteTitle"></h1>
-    <p id="siteSubtitle"></p>
-    <span class="notice" id="notice"></span>
+    <h1>とらまめMondまとめ</h1>
+    <p>とらまめさんのMond回答から、面白かったやり取りを話題ごとに整理するアーカイブ。</p>
+    <span class="notice">試作版・公開前</span>
   </div>
 </header>
 <main class="container">
   <section class="intro">
-    <div>
-      <div class="eyebrow">PICK UP</div>
-      <h2>面白かったやり取りを、流れごと読む。</h2>
-      <p>1つの質問だけでなく、その後につながった質問・回答もツリーで追えるようにするためのアーカイブです。</p>
-    </div>
+    <div class="eyebrow">PICK UP</div>
+    <h2>面白かったやり取りを、流れごと読む。</h2>
+    <p>1つの質問だけでなく、その後につながった質問・回答もツリーで追えるようにするためのアーカイブです。</p>
   </section>
   <div class="toolbar">
     <input id="search" type="search" placeholder="話題・質問・回答を検索">
@@ -34,24 +32,25 @@
 const esc = s => (s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nl = s => esc(s).replace(/\n/g, "<br>");
 
-function nodeHTML(node, depth=0) {
+function nodeHTML(node) {
   return `
-  <article class="node depth-${Math.min(depth,4)}">
-    <div class="speaker">
-      <img class="avatar" src="${node.type === 'root' || node.type === 'question' ? 'anonymous.svg' : 'anonymous.svg'}" alt="">
-      <span>匿名</span>
-    </div>
+  <article class="node">
     <div class="qbox">
-      <div class="label q">QUESTION</div>
+      <div class="label">
+        <img class="label-avatar" src="anonymous.svg" alt="">
+        <span>QUESTION</span>
+        <span class="speaker-name">匿名</span>
+      </div>
       <div class="text">${nl(node.question)}</div>
     </div>
+
     <div class="reply">
-      <div class="speaker">
-        <img class="avatar" src="toramame-icon.jpg" alt="">
-        <span>トラマメさん</span>
-      </div>
       <div class="abox">
-        <div class="label a">ANSWER</div>
+        <div class="label">
+          <img class="label-avatar" src="toramame-icon.jpg" alt="">
+          <span>ANSWER</span>
+          <span class="speaker-name">とらまめ</span>
+        </div>
         <div class="text answer">${nl(node.answer)}</div>
         <div class="links">
           ${node.mond ? `<a href="${esc(node.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>` : ""}
@@ -65,24 +64,34 @@ function nodeHTML(node, depth=0) {
 
 async function init(){
   const DATA = await fetch("data.json").then(r=>r.json());
-  document.getElementById("siteTitle").textContent=DATA.site.title;
-  document.getElementById("siteSubtitle").textContent=DATA.site.subtitle;
-  document.getElementById("notice").textContent=DATA.site.notice;
 
   function render(query=""){
     const q=query.trim().toLowerCase();
     const section=document.getElementById("topics");
     section.innerHTML="";
     let shown=0;
+
     for(const topic of DATA.topics){
       const topicText=[topic.title,topic.description,topic.category,...topic.nodes.flatMap(n=>[n.question,n.answer])].join(" ").toLowerCase();
       if(q && !topicText.includes(q)) continue;
       shown++;
+
       const wrap=document.createElement("section");
       wrap.className="topic";
-      wrap.innerHTML=`<div class="topic-head"><div><span class="cat">${esc(topic.category)}</span><h2>${esc(topic.title)}</h2><p>${esc(topic.description)}</p></div>${topic.featured?'<span class="featured">PICK UP</span>':''}</div><div class="tree"></div>`;
+      wrap.innerHTML=`
+        <div class="topic-head">
+          <div>
+            <span class="cat">${esc(topic.category)}</span>
+            <h2>${esc(topic.title)}</h2>
+            <p>${esc(topic.description)}</p>
+          </div>
+          ${topic.featured?'<span class="featured">PICK UP</span>':''}
+        </div>
+        <div class="tree"></div>`;
+
       const tree=wrap.querySelector(".tree");
       const byId=Object.fromEntries(topic.nodes.map(n=>[n.id,n]));
+
       function draw(id,parent,depth){
         const n=byId[id]; if(!n) return;
         const holder=document.createElement("div");
@@ -92,11 +101,13 @@ async function init(){
         const children=el.querySelector(".children");
         (n.children||[]).forEach(cid=>draw(cid,children,depth+1));
       }
+
       topic.nodes.filter(n=>n.type==="root").forEach(n=>draw(n.id,tree,0));
       section.appendChild(wrap);
     }
     document.getElementById("count").textContent=`${shown} topics`;
   }
+
   render();
   document.getElementById("search").addEventListener("input",e=>render(e.target.value));
 }

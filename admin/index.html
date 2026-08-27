@@ -104,6 +104,76 @@
   </div>
 </template>
 
-<script src="admin.js?v=20260827-today2"></script>
+
+
+<script>
+(async function(){
+  const WORKER_URL = "https://toramame-mond-publish.yuzuponz12345.workers.dev";
+  const KEY_NAME = "toramame_admin_key";
+  const TIME_NAME = "toramame_admin_auth_time";
+  const TTL = 30 * 60 * 1000;
+
+  // Keep the publish destination configured for admin.js too.
+  localStorage.setItem("toramame_publish_worker_url", WORKER_URL);
+
+  document.documentElement.style.visibility = "hidden";
+
+  function clearAuth(){
+    sessionStorage.removeItem(KEY_NAME);
+    sessionStorage.removeItem(TIME_NAME);
+  }
+
+  function isFresh(){
+    const t = Number(sessionStorage.getItem(TIME_NAME) || 0);
+    return !!t && (Date.now() - t) < TTL;
+  }
+
+  let key = isFresh() ? (sessionStorage.getItem(KEY_NAME) || "") : "";
+  if(!isFresh()) clearAuth();
+
+  while(true){
+    if(!key){
+      key = prompt("管理画面のパスワードを入力してください。") || "";
+      if(!key){
+        location.replace("/toramame-mond-archive/");
+        return;
+      }
+    }
+
+    try{
+      const res = await fetch(WORKER_URL + "/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Key": key
+        },
+        body: "{}"
+      });
+
+      if(res.ok){
+        sessionStorage.setItem(KEY_NAME, key);
+        sessionStorage.setItem(TIME_NAME, String(Date.now()));
+        document.documentElement.style.visibility = "visible";
+
+        // Only now start the admin application.
+        const script = document.createElement("script");
+        script.src = "admin.js?v=20260827-auth3";
+        document.body.appendChild(script);
+        return;
+      }
+
+      clearAuth();
+      key = "";
+      alert("パスワードが違います。");
+    }catch(err){
+      clearAuth();
+      alert("認証サーバーに接続できません。");
+      location.replace("/toramame-mond-archive/");
+      return;
+    }
+  }
+})();
+</script>
+
 </body>
 </html>

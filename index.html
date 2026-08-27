@@ -19,81 +19,86 @@
   <section class="intro">
     <div>
       <div class="eyebrow">PICK UP</div>
-      <h2>このサイトについて</h2>
+      <h2>面白かったやり取りを、流れごと読む。</h2>
       <p>1つの質問だけでなく、その後につながった質問・回答もツリーで追えるようにするためのアーカイブです。</p>
     </div>
   </section>
   <div class="toolbar">
-    <input id="search" type="search" placeholder="ワード検索">
+    <input id="search" type="search" placeholder="話題・質問・回答を検索">
     <div id="count"></div>
   </div>
   <section id="topics"></section>
 </main>
 <footer><div class="container">とらまめMondまとめ — prototype</div></footer>
 <script>
-const nl = s => (s || "").replace(/\n/g, "<br>");
 const esc = s => (s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let DATA = null;
+const nl = s => esc(s).replace(/\n/g, "<br>");
 
 function nodeHTML(node, depth=0) {
-  const children = (node.children || []).map(id => id).join(",");
   return `
   <article class="node depth-${Math.min(depth,4)}">
+    <div class="speaker">
+      <img class="avatar" src="${node.type === 'root' || node.type === 'question' ? 'anonymous.svg' : 'anonymous.svg'}" alt="">
+      <span>匿名</span>
+    </div>
     <div class="qbox">
       <div class="label q">QUESTION</div>
-      <div class="text">${nl(esc(node.question))}</div>
+      <div class="text">${nl(node.question)}</div>
     </div>
-    <div class="abox">
-      <div class="label a">ANSWER</div>
-      <div class="text answer">${nl(esc(node.answer))}</div>
-      <div class="links">
-        ${node.mond ? `<a href="${esc(node.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>` : ""}
-        ${node.x ? `<a href="${esc(node.x)}" target="_blank" rel="noopener">Xで見る ↗</a>` : ""}
+    <div class="reply">
+      <div class="speaker">
+        <img class="avatar" src="toramame-icon.jpg" alt="">
+        <span>トラマメさん</span>
+      </div>
+      <div class="abox">
+        <div class="label a">ANSWER</div>
+        <div class="text answer">${nl(node.answer)}</div>
+        <div class="links">
+          ${node.mond ? `<a href="${esc(node.mond)}" target="_blank" rel="noopener">Mondで見る ↗</a>` : ""}
+          ${node.x ? `<a href="${esc(node.x)}" target="_blank" rel="noopener">Xで見る ↗</a>` : ""}
+        </div>
       </div>
     </div>
-    <div class="children" data-children="${esc(children)}"></div>
+    <div class="children"></div>
   </article>`;
 }
-function flatten(nodes, out=[]) {
-  for (const n of nodes) { out.push(n); if(n._children) flatten(n._children,out); }
-  return out;
-}
-function render(query="") {
-  const section = document.getElementById("topics");
-  const q = query.trim().toLowerCase();
-  let shown=0;
-  section.innerHTML = "";
-  for (const topic of DATA.topics) {
-    const all = topic.nodes;
-    const topicText = [topic.title, topic.description, topic.category, ...all.flatMap(n=>[n.question,n.answer])].join(" ").toLowerCase();
-    if(q && !topicText.includes(q)) continue;
-    shown++;
-    const wrap = document.createElement("section");
-    wrap.className = "topic";
-    wrap.innerHTML = `<div class="topic-head"><div><span class="cat">${esc(topic.category)}</span><h2>${esc(topic.title)}</h2><p>${esc(topic.description)}</p></div>${topic.featured?'<span class="featured">PICK UP</span>':''}</div><div class="tree"></div>`;
-    const tree = wrap.querySelector(".tree");
-    const byId = Object.fromEntries(all.map(n=>[n.id,n]));
-    function draw(id, parent) {
-      const n = byId[id]; if(!n) return;
-      const holder = document.createElement("div");
-      holder.innerHTML = nodeHTML(n, n.depth||0);
-      const el = holder.firstElementChild;
-      parent.appendChild(el);
-      const childBox = el.querySelector(".children");
-      (n.children||[]).forEach(cid=>draw(cid,childBox));
-    }
-    all.filter(n=>n.type==="root").forEach(n=>draw(n.id,tree));
-    section.appendChild(wrap);
-  }
-  document.getElementById("count").textContent = `${shown} topics`;
-}
+
 async function init(){
-  DATA = await fetch("data.json").then(r=>r.json());
+  const DATA = await fetch("data.json").then(r=>r.json());
   document.getElementById("siteTitle").textContent=DATA.site.title;
   document.getElementById("siteSubtitle").textContent=DATA.site.subtitle;
   document.getElementById("notice").textContent=DATA.site.notice;
+
+  function render(query=""){
+    const q=query.trim().toLowerCase();
+    const section=document.getElementById("topics");
+    section.innerHTML="";
+    let shown=0;
+    for(const topic of DATA.topics){
+      const topicText=[topic.title,topic.description,topic.category,...topic.nodes.flatMap(n=>[n.question,n.answer])].join(" ").toLowerCase();
+      if(q && !topicText.includes(q)) continue;
+      shown++;
+      const wrap=document.createElement("section");
+      wrap.className="topic";
+      wrap.innerHTML=`<div class="topic-head"><div><span class="cat">${esc(topic.category)}</span><h2>${esc(topic.title)}</h2><p>${esc(topic.description)}</p></div>${topic.featured?'<span class="featured">PICK UP</span>':''}</div><div class="tree"></div>`;
+      const tree=wrap.querySelector(".tree");
+      const byId=Object.fromEntries(topic.nodes.map(n=>[n.id,n]));
+      function draw(id,parent,depth){
+        const n=byId[id]; if(!n) return;
+        const holder=document.createElement("div");
+        holder.innerHTML=nodeHTML(n,depth);
+        const el=holder.firstElementChild;
+        parent.appendChild(el);
+        const children=el.querySelector(".children");
+        (n.children||[]).forEach(cid=>draw(cid,children,depth+1));
+      }
+      topic.nodes.filter(n=>n.type==="root").forEach(n=>draw(n.id,tree,0));
+      section.appendChild(wrap);
+    }
+    document.getElementById("count").textContent=`${shown} topics`;
+  }
   render();
-  document.getElementById("search").addEventListener("input", e=>render(e.target.value));
+  document.getElementById("search").addEventListener("input",e=>render(e.target.value));
 }
 init();
 </script>

@@ -56,6 +56,23 @@
   .clear-search{flex:0 0 auto}
 }
 
+
+.category-filter{display:flex;gap:8px;flex-wrap:wrap;margin:-18px 0 30px}
+.category-chip{
+  border:1px solid #d8d2c9;
+  background:#fff;
+  color:#687483;
+  border-radius:999px;
+  padding:5px 11px;
+  font-size:11px;
+  cursor:pointer;
+}
+.category-chip.active{
+  background:#202226;
+  color:#fff;
+  border-color:#202226;
+}
+
 </style></head><body>
 <header class="hero"><div class="wrap"><div class="eyebrow">MOND ARCHIVE</div><h1 id="siteTitle">とらまめMondまとめ</h1><p id="siteSubtitle">とらまめのMond回答を読者目線でピックアップ</p><span id="siteNotice" class="badge">試作版・公開前</span></div></header>
 <main class="wrap"><section class="intro today-updates">
@@ -68,7 +85,8 @@
     <button id="clearSearch" class="clear-search" type="button" hidden>クリア</button>
   </div>
   <span id="count" class="count"></span>
-</div><section id="topics"></section></main><footer><div class="wrap" style="display:flex;justify-content:space-between;gap:16px;align-items:center"><span>とらまめMondまとめ — prototype</span><a href="admin/" style="color:#777;text-decoration:none;font-size:11px">管理</a></div></footer>
+</div>
+<div class="category-filter" id="categoryFilter" aria-label="カテゴリで絞り込み"></div><section id="topics"></section></main><footer><div class="wrap" style="display:flex;justify-content:space-between;gap:16px;align-items:center"><span>とらまめMondまとめ — prototype</span><a href="admin/" style="color:#777;text-decoration:none;font-size:11px">管理</a></div></footer>
 <script>
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -105,6 +123,21 @@ async function init(){
   const data=await response.json();
   const sec=document.getElementById('topics');
   const site=data.site||{};
+  let activeCategory="";
+
+  const categories=[...new Set(
+    (data.topics||[])
+      .map(t=>(t.category||"").trim())
+      .filter(Boolean)
+  )].sort((a,b)=>a.localeCompare(b,"ja"));
+
+  const categoryFilter=document.getElementById("categoryFilter");
+  categoryFilter.innerHTML=[
+    `<button type="button" class="category-chip active" data-category="">すべて</button>`,
+    ...categories.map(c=>`<button type="button" class="category-chip" data-category="${esc(c)}">${esc(c)}</button>`)
+  ].join("");
+
+
 
   document.getElementById('siteTitle').textContent=site.title||'とらまめMondまとめ';
   document.getElementById('siteSubtitle').textContent=site.subtitle||'';
@@ -152,7 +185,8 @@ async function init(){
       ].map(v=>String(v).toLowerCase());
 
       const matched=!q || fields.some(v=>v.includes(q));
-      if(!matched) continue;
+      const categoryMatched=!activeCategory || (t.category||"")===activeCategory;
+      if(!matched || !categoryMatched) continue;
 
       shown++;
 
@@ -243,6 +277,14 @@ async function init(){
     clearSearch.hidden=true;
     render('');
     searchInput.focus();
+  });
+
+  categoryFilter.addEventListener("click",e=>{
+    const btn=e.target.closest("[data-category]");
+    if(!btn)return;
+    activeCategory=btn.dataset.category||"";
+    categoryFilter.querySelectorAll(".category-chip").forEach(x=>x.classList.toggle("active",x===btn));
+    render(searchInput.value);
   });
 
   document.querySelectorAll('.today-item').forEach(btn=>{

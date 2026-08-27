@@ -31,6 +31,24 @@
   </aside>
 
   <section class="editor">
+
+    <section class="site-settings" style="margin:0 0 28px;padding:22px;border:1px solid #ddd5ca;border-radius:16px;background:#fff;">
+      <div class="section-head" style="margin-top:0">
+        <div>
+          <span class="eyebrow">SITE</span>
+          <h3 style="margin:4px 0 0">サイト基本情報</h3>
+        </div>
+        <button id="saveSiteBtn" class="primary">基本情報を保存</button>
+      </div>
+      <div class="form-grid">
+        <label>サイト名<input id="siteTitle"></label>
+        <label>公開状態<input id="siteNotice"></label>
+        <label class="wide">サブタイトル<textarea id="siteSubtitle" rows="2"></textarea></label>
+        <label class="wide">PICK UP 見出し<input id="sitePickupTitle"></label>
+        <label class="wide">PICK UP 説明<textarea id="sitePickupDescription" rows="2"></textarea></label>
+      </div>
+    </section>
+
     <div id="emptyState" class="empty">
       <h2>話題を選択してください</h2>
       <p>左の一覧から編集する話題を選べます。</p>
@@ -88,6 +106,6 @@
   </div>
 </template>
 
-<script src="admin.js?v=20260827-1705"></script>
+<script src="admin.js?v=20260827-site1"></script>
 </body>
 </html>

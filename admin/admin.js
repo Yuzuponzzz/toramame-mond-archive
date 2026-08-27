@@ -119,14 +119,54 @@ $("saveSiteBtn").onclick=()=>{
 };
 
 
+
+function moveTopic(id,delta){
+  if(!state.data?.topics)return;
+  const index=state.data.topics.findIndex(t=>t.id===id);
+  if(index<0)return;
+  const next=index+delta;
+  if(next<0 || next>=state.data.topics.length)return;
+
+  const [topic]=state.data.topics.splice(index,1);
+  state.data.topics.splice(next,0,topic);
+
+  renderTopics();
+  renderEditor();
+}
+
 function renderTopics(){
   const box=$("topicList"); box.innerHTML="";
   for(const t of (state.data?.topics||[])){
     const b=document.createElement("button");
     b.className="topic-item"+(t.id===state.selected?" active":"");
+    const row=document.createElement("div");
+    row.className="topic-row";
+
     b.innerHTML=`<strong>${text(t.title)}</strong><span>${text(t.category||"カテゴリ未設定")}</span>`;
     b.onclick=()=>{state.selected=t.id;renderTopics();renderEditor();};
-    box.appendChild(b);
+
+    const controls=document.createElement("div");
+    controls.className="topic-order-controls";
+
+    const up=document.createElement("button");
+    up.type="button";
+    up.className="topic-order-btn";
+    up.textContent="↑";
+    up.title="上へ";
+    up.disabled=(state.data.topics[0]===t);
+    up.onclick=e=>{e.stopPropagation();moveTopic(t.id,-1);};
+
+    const down=document.createElement("button");
+    down.type="button";
+    down.className="topic-order-btn";
+    down.textContent="↓";
+    down.title="下へ";
+    down.disabled=(state.data.topics[state.data.topics.length-1]===t);
+    down.onclick=e=>{e.stopPropagation();moveTopic(t.id,1);};
+
+    controls.append(up,down);
+    row.append(b,controls);
+    box.appendChild(row);
   }
 }
 

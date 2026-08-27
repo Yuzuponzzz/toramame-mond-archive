@@ -5,6 +5,38 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>とらまめMondまとめ — 管理画面</title>
 <link rel="stylesheet" href="admin.css">
+
+<style>
+.topic-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  align-items:stretch;
+  margin:5px 0;
+}
+.topic-row .topic-item{margin:0}
+.topic-order-controls{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.topic-order-btn{
+  min-width:34px;
+  height:27px;
+  padding:0;
+  border:1px solid #d8d2c9;
+  border-radius:7px;
+  background:#fff;
+  color:#47515c;
+  font-weight:800;
+  line-height:1;
+}
+.topic-order-btn:disabled{
+  opacity:.28;
+  cursor:default;
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -157,7 +189,7 @@
 
         // Only now start the admin application.
         const script = document.createElement("script");
-        script.src = "admin.js?v=20260827-auth3";
+        script.src = "admin.js?v=20260827-order1";
         document.body.appendChild(script);
         return;
       }
